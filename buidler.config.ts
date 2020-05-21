@@ -1,8 +1,15 @@
-import { BuidlerConfig } from "@nomiclabs/buidler/config";
+import { BuidlerConfig, usePlugin } from "@nomiclabs/buidler/config";
+
+usePlugin("@nomiclabs/buidler-waffle");
+usePlugin("buidler-typechain");
 
 const config: BuidlerConfig = {
   solc: {
     version: "0.6.2"
+  },
+  typechain: {
+    outDir: "typechain",
+    target: "ethers"
   }
 };
 
