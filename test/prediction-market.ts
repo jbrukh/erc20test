@@ -3,20 +3,34 @@ import { ethers } from "@nomiclabs/buidler";
 import chai, { expect } from "chai";
 
 import { PredictionMarket } from "../typechain/PredictionMarket"
+import { NiftyDollar } from "../typechain/NiftyDollar";
 
 
 describe("PreditionMarket", () => {
     
     let pm: PredictionMarket;
+    let niftyDollar : NiftyDollar;
+
     let ownerAddr : string;
     let userAddr : string;
 
-    beforeEach(async () => {
+    before(async () => {
+        // get users
         const [owner, user] = await ethers.getSigners();
         ownerAddr = await owner.getAddress();
-        userAddr = await user.getAddress();    
-        const PredictionMarketFactory = await ethers.getContractFactory("PredictionMarket");
-        pm = await PredictionMarketFactory.deploy() as PredictionMarket;
+        userAddr = await user.getAddress();
+
+        // deploy dollar
+        const niftyDollarFactory = await ethers.getContractFactory("NiftyDollar");
+        niftyDollar = await niftyDollarFactory.deploy(100) as NiftyDollar;
+        await niftyDollar.deployed();
+    });
+
+    beforeEach(async () => {
+        // deploy factory with dollar address
+        const pmFactory = await ethers.getContractFactory("PredictionMarket");
+        pm = await pmFactory.deploy(niftyDollar.address) as PredictionMarket;
+        await pm.deployed();
     });
 
     it("should revert when getting the current price before market is active", async () => {
@@ -33,6 +47,15 @@ describe("PreditionMarket", () => {
 
     it("should succeed if trying to buy", async () => {
         await expect(pm.predictPriceUp(10)).not.to.be.reverted;
+    });
+
+    it("should revert if the minimum size is not met for buys", async () => {
+        await expect(pm.predictPriceUp(0)).to.be.reverted;
+    });
+
+    it("should revert if the minimum size is not met for sells", async () => {
+        await expect(pm.predictPriceUp(10)).not.to.be.reverted;
+        await expect(pm.predictPriceDown(0)).to.be.reverted;
     });
 
     it("should update correctly after the first buy", async () => {

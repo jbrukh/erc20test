@@ -1,11 +1,20 @@
 pragma solidity ^0.6.2;
 
+import "./NiftyDollar.sol";
+
 contract PredictionMarket {
 
 
     bool internal isMarketOpen_ = false;
     uint256 internal currentPrice = 0.0;
+    address public niftyDollarAddr;
 
+    NiftyDollar niftyDollar;
+
+    constructor(address _niftyDollarAddr) public {
+        niftyDollarAddr = _niftyDollarAddr;
+        niftyDollar = NiftyDollar(niftyDollarAddr);
+    }
 
     modifier marketIsOpen() {
         require(isMarketOpen_, "The market has not had any bids.");
