@@ -51,4 +51,9 @@ describe("PreditionMarket", () => {
         expect(await pm.getCurrentPrice()).to.equal(5);
     });
 
+    it("should revert on a sale which exceeds the price", async () => {
+        await expect(pm.predictPriceUp(10)).not.to.be.reverted;
+        await expect(pm.predictPriceDown(10)).to.be.reverted;
+    });
+
 });
