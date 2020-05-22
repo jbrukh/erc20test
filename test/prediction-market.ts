@@ -75,4 +75,10 @@ describe("PreditionMarket", () => {
         await expect(pm.predictPriceDown(10)).to.be.reverted;
     });
 
+    it("should track the correct balance", async () => {
+        await expect(pm.predictPriceUp(10)).not.to.be.reverted;
+        await expect(pm.predictPriceUp(20)).not.to.be.reverted;
+        expect(await pm.getBalance(ownerAddr)).to.equal(30);
+    });
+
 });

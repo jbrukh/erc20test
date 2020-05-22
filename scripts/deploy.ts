@@ -14,8 +14,8 @@ async function main() {
   // The contract is NOT deployed yet; we must wait until it is mined
   await niftyDollar.deployed();
   console.log('Nifty Dollar deployed.\n');
-  
 }
+
 main()
   .then(() => process.exit(0))
   .catch(error => {
