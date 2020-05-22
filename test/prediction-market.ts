@@ -31,14 +31,13 @@ describe("PreditionMarket", () => {
         const pmFactory = await ethers.getContractFactory("PredictionMarket");
         pm = await pmFactory.deploy(niftyDollar.address) as PredictionMarket;
         await pm.deployed();
+
+        // allow contract to spend owner's dollars
+        await niftyDollar.approve(pm.address, 1000000);
     });
 
-    it("should revert when getting the current price before market is active", async () => {
-        await expect(pm.getCurrentPrice()).to.be.reverted;
-    });
-
-    it("should be a closed market", async () => {
-        expect(await pm.isMarketOpen()).to.be.false;
+    it("currrent price should be 0", async () => {
+        expect(await pm.getCurrentPrice()).to.equal(0);
     });
 
     it("should revert if trying to sell", async () => {
@@ -60,17 +59,14 @@ describe("PreditionMarket", () => {
 
     it("should update correctly after the first buy", async () => {
         await expect(pm.predictPriceUp(10)).not.to.be.reverted;
-        expect(await pm.isMarketOpen()).to.be.true;
         expect(await pm.getCurrentPrice()).to.equal(10);
     });
 
     it("should update correctly after a buy and a sell", async () => {
         await expect(pm.predictPriceUp(10)).not.to.be.reverted;
-        expect(await pm.isMarketOpen()).to.be.true;
         expect(await pm.getCurrentPrice()).to.equal(10);
         
         await expect(pm.predictPriceDown(5)).not.to.be.reverted;
-        expect(await pm.isMarketOpen()).to.be.true;
         expect(await pm.getCurrentPrice()).to.equal(5);
     });
 

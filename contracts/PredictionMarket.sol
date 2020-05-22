@@ -1,24 +1,22 @@
 pragma solidity ^0.6.2;
 
-import "./NiftyDollar.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract PredictionMarket {
 
-
-    bool internal isMarketOpen_ = false;
+    // state
     uint256 internal currentPrice = 0.0;
-    address public niftyDollarAddr;
+    IERC20 internal niftyDollar;
+    mapping (address => uint256) balances;
+    uint internal expirationBlock = 0;
 
-    NiftyDollar niftyDollar;
+    // public state
+    address public niftyDollarAddr;
 
     constructor(address _niftyDollarAddr) public {
         niftyDollarAddr = _niftyDollarAddr;
-        niftyDollar = NiftyDollar(niftyDollarAddr);
-    }
-
-    modifier marketIsOpen() {
-        require(isMarketOpen_, "The market has not had any bids.");
-        _;
+        niftyDollar = IERC20(niftyDollarAddr);
+        expirationBlock = block.number + 250; // TODO: make expiration a parameter
     }
 
     modifier atLeast(uint256 amount, uint256 minimum) {
@@ -26,42 +24,68 @@ contract PredictionMarket {
         _;
     }
 
-    /**
-     * @dev Get the current price of the prediction market.
-     */
-    function getCurrentPrice() external view marketIsOpen returns (uint256) {
-        return currentPrice;
+    modifier onlyAfterExpiration() {
+        require(block.number > expirationBlock, "The market is still active.");
+        _;
+    }
+
+    modifier onlyBeforeExpiration() {
+        require(block.number <= expirationBlock, "The market is now closed.");
+        _;
     }
 
     /**
-     * @dev Returns true if and only if the market has had bids.
+     * @dev Get the current price of the prediction market.
      */
-    function isMarketOpen() external view returns (bool) {
-        return isMarketOpen_;
+    function getCurrentPrice() external view returns (uint256) {
+        return currentPrice;
     }
 
     /**
      * @dev Move the prediction price up by ``amount``.
      */
-    function predictPriceUp(uint256 _amount) external atLeast(_amount, 1.0) {
-        // if the market is not open, make it open
-        if (!isMarketOpen_) {
-            isMarketOpen_ = true;
-        }
+    function predictPriceUp(uint256 _amount) external atLeast(_amount, 1.0) onlyBeforeExpiration {
+        // send
+        niftyDollar.transferFrom(msg.sender, address(this), _amount);
 
+        // track balance
+        balances[msg.sender] += _amount;
+
+        // accounting
         currentPrice += _amount;
     }
 
-    function predictPriceDown(uint256 _amount) external atLeast(_amount, 1.0) {
+    /**
+     * @dev Move the prediction price down by ``amount``.
+     */
+    function predictPriceDown(uint256 _amount) external atLeast(_amount, 1.0) onlyBeforeExpiration {
         // cannot make the current price lower than 0
         require(_amount < currentPrice, "The amount cannot me more than current price.");
-        
-        // if the market is not open, make it open
-        if (!isMarketOpen_) {
-            isMarketOpen_ = true;
-        }
 
+        // send
+        niftyDollar.transferFrom(msg.sender, address(this), _amount);
+
+        // track balance
+        balances[msg.sender] += _amount;
+
+        // accounting
         currentPrice -= _amount;
+    }
+
+    /**
+     * @dev Returns the balance of a given address.
+     */
+    function getBalance(address addr) external view returns (uint256) {
+        return balances[addr];
+    }
+
+    /**
+     * @dev Withdraw any active balance from the contract.
+     */
+    function withdraw() external onlyAfterExpiration {
+        require(balances[msg.sender] > 0, "Sender has no balance.");
+        uint256 _amount = balances[msg.sender];
+        niftyDollar.transferFrom(address(this), msg.sender, _amount);
     }
 
 }
