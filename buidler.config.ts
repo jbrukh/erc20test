@@ -1,6 +1,7 @@
 import { BuidlerConfig, usePlugin } from "@nomiclabs/buidler/config";
 
 usePlugin("@nomiclabs/buidler-waffle");
+usePlugin("@nomiclabs/buidler-ganache");
 usePlugin("buidler-typechain");
 
 const config: BuidlerConfig = {

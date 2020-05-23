@@ -8,9 +8,10 @@ contract PredictionMarket {
     uint256 internal currentPrice = 0.0;
     IERC20 internal niftyDollar;
     mapping (address => uint256) balances;
-    uint internal expirationBlock = -1;
+    uint internal expirationBlock = 2**256 - 1; // max uint256
     uint internal challengePeriodBlock = 0;
-    uint internal CHALLENGE_PERIOD_BLOCKS = 5;
+    uint internal CHALLENGE_PERIOD_BLOCKS = 1;
+    uint internal EXPIRATION_BLOCKS = 5;
 
     // public state
     address public niftyDollarAddr;
@@ -23,7 +24,7 @@ contract PredictionMarket {
     constructor(address _niftyDollarAddr) public {
         niftyDollarAddr = _niftyDollarAddr;
         niftyDollar = IERC20(niftyDollarAddr);
-        expirationBlock = block.number + 250; // TODO: make expiration a parameter
+        expirationBlock = block.number + EXPIRATION_BLOCKS; // TODO: make expiration a parameter
     }
 
     modifier atLeast(uint256 amount, uint256 minimum) {
@@ -41,8 +42,11 @@ contract PredictionMarket {
         _;
     }
 
+    /**
+     * @dev 
+     */
     modifier onlyAfterChallengePeriod() {
-        require(allowedToBuy(), "The challenge period is not over yet.");
+        require(block.number > challengePeriodBlock, "The challenge period is not over yet.");
         _;
     }
 
@@ -122,7 +126,7 @@ contract PredictionMarket {
     }
 
     function buy() external onlyAfterChallengePeriod {
-
+        
     }
 
 }
