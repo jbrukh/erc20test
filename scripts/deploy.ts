@@ -13,7 +13,14 @@ async function main() {
   console.log(niftyDollar.deployTransaction.hash);
   // The contract is NOT deployed yet; we must wait until it is mined
   await niftyDollar.deployed();
-  console.log('Nifty Dollar deployed.\n');
+  console.log('NiftyDollar deployed.\n');
+
+  const pmf = await ethers.getContract("PredictionMarket");
+  const pm = await pmf.deploy(niftyDollar.address);
+  console.log(pm.address);
+  console.log(pm.deployTransaction.hash);
+  await pm.deployed();
+  console.log('PredictionMarket deployed.\n');
 }
 
 main()
