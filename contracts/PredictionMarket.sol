@@ -115,6 +115,10 @@ contract PredictionMarket {
         return challengePeriodBlock;
     }
 
+    function getExpirationBlock() external view returns (uint) {
+        return expirationBlock;
+    }
+
     /**
      * @dev Withdraw any active balance from the contract.
      */
@@ -122,7 +126,7 @@ contract PredictionMarket {
         require(balances[msg.sender] > 0, "Sender has no balance.");
         uint256 _amount = balances[msg.sender];
         delete balances[msg.sender];
-        niftyDollar.transferFrom(address(this), msg.sender, _amount);
+        niftyDollar.transfer(msg.sender, _amount);
     }
 
     function buy() external onlyAfterChallengePeriod {

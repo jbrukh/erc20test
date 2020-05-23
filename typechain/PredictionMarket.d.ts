@@ -12,9 +12,19 @@ import {
 
 interface PredictionMarketInterface extends Interface {
   functions: {
+    allowedToBuy: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    buy: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    getBalance: TypedFunctionDescription<{ encode([addr]: [string]): string }>;
+
+    getChallengeBlock: TypedFunctionDescription<{ encode([]: []): string }>;
+
     getCurrentPrice: TypedFunctionDescription<{ encode([]: []): string }>;
 
-    isMarketOpen: TypedFunctionDescription<{ encode([]: []): string }>;
+    getExpirationBlock: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    niftyDollarAddr: TypedFunctionDescription<{ encode([]: []): string }>;
 
     predictPriceDown: TypedFunctionDescription<{
       encode([_amount]: [BigNumberish]): string;
@@ -23,9 +33,27 @@ interface PredictionMarketInterface extends Interface {
     predictPriceUp: TypedFunctionDescription<{
       encode([_amount]: [BigNumberish]): string;
     }>;
+
+    withdraw: TypedFunctionDescription<{ encode([]: []): string }>;
   };
 
-  events: {};
+  events: {
+    PredictPriceDown: TypedEventDescription<{
+      encodeTopics([predictor, amount, assetPrice]: [
+        string | null,
+        null,
+        null
+      ]): string[];
+    }>;
+
+    PredictPriceUp: TypedEventDescription<{
+      encodeTopics([predictor, amount, assetPrice]: [
+        string | null,
+        null,
+        null
+      ]): string[];
+    }>;
+  };
 }
 
 export class PredictionMarket extends Contract {
@@ -45,9 +73,19 @@ export class PredictionMarket extends Contract {
   interface: PredictionMarketInterface;
 
   functions: {
+    allowedToBuy(): Promise<boolean>;
+
+    buy(overrides?: TransactionOverrides): Promise<ContractTransaction>;
+
+    getBalance(addr: string): Promise<BigNumber>;
+
+    getChallengeBlock(): Promise<BigNumber>;
+
     getCurrentPrice(): Promise<BigNumber>;
 
-    isMarketOpen(): Promise<boolean>;
+    getExpirationBlock(): Promise<BigNumber>;
+
+    niftyDollarAddr(): Promise<string>;
 
     predictPriceDown(
       _amount: BigNumberish,
@@ -58,11 +96,23 @@ export class PredictionMarket extends Contract {
       _amount: BigNumberish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    withdraw(overrides?: TransactionOverrides): Promise<ContractTransaction>;
   };
+
+  allowedToBuy(): Promise<boolean>;
+
+  buy(overrides?: TransactionOverrides): Promise<ContractTransaction>;
+
+  getBalance(addr: string): Promise<BigNumber>;
+
+  getChallengeBlock(): Promise<BigNumber>;
 
   getCurrentPrice(): Promise<BigNumber>;
 
-  isMarketOpen(): Promise<boolean>;
+  getExpirationBlock(): Promise<BigNumber>;
+
+  niftyDollarAddr(): Promise<string>;
 
   predictPriceDown(
     _amount: BigNumberish,
@@ -74,15 +124,41 @@ export class PredictionMarket extends Contract {
     overrides?: TransactionOverrides
   ): Promise<ContractTransaction>;
 
-  filters: {};
+  withdraw(overrides?: TransactionOverrides): Promise<ContractTransaction>;
+
+  filters: {
+    PredictPriceDown(
+      predictor: string | null,
+      amount: null,
+      assetPrice: null
+    ): EventFilter;
+
+    PredictPriceUp(
+      predictor: string | null,
+      amount: null,
+      assetPrice: null
+    ): EventFilter;
+  };
 
   estimate: {
+    allowedToBuy(): Promise<BigNumber>;
+
+    buy(): Promise<BigNumber>;
+
+    getBalance(addr: string): Promise<BigNumber>;
+
+    getChallengeBlock(): Promise<BigNumber>;
+
     getCurrentPrice(): Promise<BigNumber>;
 
-    isMarketOpen(): Promise<BigNumber>;
+    getExpirationBlock(): Promise<BigNumber>;
+
+    niftyDollarAddr(): Promise<BigNumber>;
 
     predictPriceDown(_amount: BigNumberish): Promise<BigNumber>;
 
     predictPriceUp(_amount: BigNumberish): Promise<BigNumber>;
+
+    withdraw(): Promise<BigNumber>;
   };
 }
