@@ -8,10 +8,17 @@ contract PredictionMarket {
     uint256 internal currentPrice = 0.0;
     IERC20 internal niftyDollar;
     mapping (address => uint256) balances;
-    uint internal expirationBlock = 0;
+    uint internal expirationBlock = -1;
+    uint internal challengePeriodBlock = 0;
+    uint internal CHALLENGE_PERIOD_BLOCKS = 5;
 
     // public state
     address public niftyDollarAddr;
+
+
+    // events
+    event PredictPriceUp(address indexed predictor, uint256 amount, uint256 assetPrice);
+    event PredictPriceDown(address indexed predictor, uint256 amount, uint256 assetPrice);
 
     constructor(address _niftyDollarAddr) public {
         niftyDollarAddr = _niftyDollarAddr;
@@ -34,11 +41,20 @@ contract PredictionMarket {
         _;
     }
 
+    modifier onlyAfterChallengePeriod() {
+        require(allowedToBuy(), "The challenge period is not over yet.");
+        _;
+    }
+
     /**
      * @dev Get the current price of the prediction market.
      */
     function getCurrentPrice() external view returns (uint256) {
         return currentPrice;
+    }
+
+    function allowedToBuy() external view returns (bool) {
+        return block.number > challengePeriodBlock;
     }
 
     /**
@@ -53,6 +69,12 @@ contract PredictionMarket {
 
         // accounting
         currentPrice += _amount;
+
+        // challenge period
+        challengePeriodBlock = block.number + CHALLENGE_PERIOD_BLOCKS;
+
+        // event
+        emit PredictPriceUp(msg.sender, _amount, currentPrice);
     }
 
     /**
@@ -70,6 +92,12 @@ contract PredictionMarket {
 
         // accounting
         currentPrice -= _amount;
+
+        // challenge period
+        challengePeriodBlock = block.number + CHALLENGE_PERIOD_BLOCKS;
+
+        // event
+        emit PredictPriceDown(msg.sender, _amount, currentPrice);
     }
 
     /**
@@ -79,13 +107,22 @@ contract PredictionMarket {
         return balances[addr];
     }
 
+    function getChallengeBlock() external view returns (uint) {
+        return challengePeriodBlock;
+    }
+
     /**
      * @dev Withdraw any active balance from the contract.
      */
     function withdraw() external onlyAfterExpiration {
         require(balances[msg.sender] > 0, "Sender has no balance.");
         uint256 _amount = balances[msg.sender];
+        delete balances[msg.sender];
         niftyDollar.transferFrom(address(this), msg.sender, _amount);
+    }
+
+    function buy() external onlyAfterChallengePeriod {
+
     }
 
 }
